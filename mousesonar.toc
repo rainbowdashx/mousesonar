@@ -2,7 +2,9 @@
 ## Title: mouse sonar
 ## Version: 0.1
 ## Author: Morf
+## SavedVariables: mouseSonarOpt
 
 
 mousesonar.lua
+
 

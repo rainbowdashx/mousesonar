@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="MOUSESONAR" description="Pulse"  header="MOUSESONAR">
+  		goPulse()
+  </Binding>
+</Bindings>
