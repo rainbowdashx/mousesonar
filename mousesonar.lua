@@ -100,6 +100,7 @@ function mouseSonar:ADDON_LOADED(addon,...)
       mouseSonarOpt = {}
       mouseSonarOpt.pulseSize = 256
       mouseSonarOpt.onlyCombat = true
+      mouseSonarOpt.onMouselook = true
     end
     createOptions()
   end
@@ -170,7 +171,9 @@ end)
                 TotalElapsed =0 
 
                 if combate or not mouseSonarOpt.onlyCombat then
-                  model:Show()
+                  if mouseSonarOpt.onMouselook then 
+                    model:Show()
+                  end
                 end
             end
         end
@@ -213,9 +216,9 @@ end
 function createOptions()
   mouseSonarOptPanel.panel = CreateFrame( "Frame", "Mouse Sonar Options", UIParent );
   mouseSonarOptPanel.panel.name = "Mouse Sonar Options";
-  mouseSonarOptPanel.lab = createLabel(mouseSonarOptPanel.panel, "Only inCombat")
+  mouseSonarOptPanel.lab = createLabel(mouseSonarOptPanel.panel, "Show Only inCombat")
   mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -48)
-  mouseSonarOptPanel.chk = createCheck(mouseSonarOptPanel.panel, "TEST", 20, 20)
+  mouseSonarOptPanel.chk = createCheck(mouseSonarOptPanel.panel, "chkincombat", 20, 20)
   mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -45)
   if (mouseSonarOpt.onlyCombat) then
     mouseSonarOptPanel.chk:SetChecked(true)
@@ -229,12 +232,29 @@ function createOptions()
           end)
 
 
+  mouseSonarOptPanel.lab = createLabel(mouseSonarOptPanel.panel, "Show on Mouselook end")
+  mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88)
+  mouseSonarOptPanel.chk = createCheck(mouseSonarOptPanel.panel, "chkMouselook", 20, 20)
+  mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85)
+  if (mouseSonarOpt.onMouselook) then
+    mouseSonarOptPanel.chk:SetChecked(true)
+  end
+  mouseSonarOptPanel.chk:SetScript("OnClick", function()
+            if(mouseSonarOpt.onMouselook) then
+              mouseSonarOpt.onMouselook = false
+            else
+              mouseSonarOpt.onMouselook = true
+            end
+          end)
+
+
+
 
 
 
   mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 64, 1024, 32,mouseSonarOptPanel.panel)
   mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize)
-  mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -95)
+  mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -125)
   mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
     mouseSonarOpt.pulseSize = value
     goPulse()
@@ -244,7 +264,7 @@ function createOptions()
 
   
   mouseSonarOptPanel.helpText=createLabel(mouseSonarOptPanel.panel, "You can Keybind or macro /pulse to Pulse Manually")
-  mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -125)
+  mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -165)
 
 
   InterfaceOptions_AddCategory(mouseSonarOptPanel.panel);
