@@ -275,6 +275,17 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
  --[[
  -- Make a child panel
  mouseSonarOpt.childpanel = CreateFrame( "Frame", "mouseSonarOptChild", mouseSonarOpt.panel);
