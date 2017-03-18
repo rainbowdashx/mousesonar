@@ -45,7 +45,7 @@ local function onUpdate(self,elapsed)
 		return;
 	end
 
-	local alpha = SquareInvertFunc(g_totalElapsed, 1);
+	local alpha = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.startingAlphaValue);
 	g_texture:SetAlpha(alpha);
 
 	local pulseSizeThisFrame = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.pulseSize);
@@ -81,6 +81,7 @@ function mouseSonar:ADDON_LOADED(addon,...)
 			{
 				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
 				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
+				startingAlphaValue = (mouseSonarOpt ~= nil and mouseSonarOpt.startingAlphaValue) or 1,
 				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
 				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
@@ -252,9 +253,19 @@ function createOptions()
 		goPulse();
 	end);
 
+	-- STARTING ALPHA VALUE
+	g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15, 0, 255, 1);
+	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -185);
+
+	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
+		mouseSonarOpt.startingAlphaValue = value / 255;
+		goPulse();
+	end);
+
 
 	g_mouseSonarOptPanel.helpText = createLabel("You can Keybind or macro /pulse to Pulse Manually");
-	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -205);
+	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -225);
 
 	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
