@@ -82,6 +82,7 @@ function mouseSonar:ADDON_LOADED(addon,...)
 				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
 				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
 				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
+				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
 			}
 		createOptions();
@@ -154,7 +155,7 @@ function RemoveHideCondition(conditionName)
 end
 
 function goPulse()
-	if g_combat or not mouseSonarOpt.onlyCombat then
+	if (g_combat or not mouseSonarOpt.onlyCombat) and (IsInRaid() or not mouseSonarOpt.onlyRaid) then
 		g_totalElapsed = 0;
 		g_circle:Show();
 	end
@@ -217,12 +218,23 @@ function createOptions()
 		mouseSonarOpt.onlyCombat = not mouseSonarOpt.onlyCombat;
 	end)
 
+	-- ONLY IN RAID
+	g_mouseSonarOptPanel.lab = createLabel("Show only while in raid group");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
+	g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyRaid);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.onlyRaid = not mouseSonarOpt.onlyRaid;
+	end)
+
 
 	-- MOUSE LOOK END
 	g_mouseSonarOptPanel.lab = createLabel("Show on Mouselook end");
-	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
 	g_mouseSonarOptPanel.chk = createCheck("chkMouselook", 20, 20);
-	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
 	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onMouselook);
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -233,7 +245,7 @@ function createOptions()
 	-- PULSE SIZE
 	g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 64, 1024, 32);
 	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize);
-	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -125);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -145);
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.pulseSize = value;
