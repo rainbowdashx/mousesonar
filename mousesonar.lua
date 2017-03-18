@@ -37,7 +37,7 @@ end
 
 local function onUpdate(self,elapsed)
 
-	if g_totalElapsed == -1 then
+	if g_totalElapsed == -1 or mouseSonarOpt.deactivated then
 		return;
 	elseif g_totalElapsed > PULSE_LIFE_TIME then
 		g_totalElapsed = -1;
@@ -79,6 +79,7 @@ function mouseSonar:ADDON_LOADED(addon,...)
 	if addon == "mousesonar" then
 		mouseSonarOpt =
 			{
+				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
 				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
 				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
@@ -191,6 +192,18 @@ end
 function createOptions()
 	g_mouseSonarOptPanel.panel = CreateFrame( "Frame", "Mouse Sonar Options", UIParent);
 	g_mouseSonarOptPanel.panel.name = "Mouse Sonar Options";
+
+
+	-- DEACTIVATED
+	g_mouseSonarOptPanel.lab = createLabel("Deactivated");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -48);
+	g_mouseSonarOptPanel.chk = createCheck("chkDeactivate", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -45);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.deactivated);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.deactivated = not mouseSonarOpt.deactivated;
+	end);
 
 
 	-- ONLY IN COMBAT
