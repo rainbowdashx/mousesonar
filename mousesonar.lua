@@ -3,295 +3,269 @@
 
 _G.CreateFrame("Frame"):SetScript("OnUpdate", function(self, elapsed)
 
-          if IsMouselooking() then
-              AddHideCondition("Mouselook")
-          else
-              RemoveHideCondition("Mouselook")
-          end
-      
-  end)
+	if IsMouselooking() then
+		AddHideCondition("Mouselook");
+	else
+		RemoveHideCondition("Mouselook");
+	end
+end)
 
-BINDING_HEADER_MOUSESONAR = "Mouse Sonar"
-BINDING_NAME_MOUSESONAR = "Pulse"
+BINDING_HEADER_MOUSESONAR = "Mouse Sonar";
+BINDING_NAME_MOUSESONAR = "Pulse";
 
-local mouseSonarOptPanel = {}
-local ActiveHideConditions = {}
-local combate = false
-local previousX,previousY,toggleHide = false
+local g_mouseSonarOptPanel = {};
+local g_activeHideConditions = {};
+local g_combat = false;
 
-local model = CreateFrame("Model", nil, self)
-model:SetWidth(256) 
-model:SetHeight(256)
-model:Show()
-local t = model:CreateTexture(nil,"BACKGROUND")
---t:SetTexture(1,1,1,0.3)
-t:SetTexture("Interface\\AddOns\\mousesonar\\Circle_White")
-t:SetVertexColor(1, 1, 1 , 0.6)
-t:SetAllPoints(model)
+local g_circle = CreateFrame("Model", nil, self);
+g_circle:SetWidth(0);
+g_circle:SetHeight(0);
+g_circle:Show();
+local g_texture = g_circle:CreateTexture(nil,"BACKGROUND");
+g_texture:SetTexture("Interface\\AddOns\\mousesonar\\Circle_White");
+g_texture:SetVertexColor(1, 1, 1 , 1);
+g_texture:SetAllPoints(g_circle);
 
+local PULSE_LIFE_TIME = 0.5; -- seconds
+local g_totalElapsed = -1;
 
+local function SquareInvertFunc(elapsedTime, startingValue)
+	local temp = elapsedTime / PULSE_LIFE_TIME;
+	local value = 1.0 - (temp * temp);
+	return value * startingValue;
+end
 
-local UPDATE_INTERVAL = 0.0 --seconds
-local TotalElapsed = 0
-
--- t = time ==  time elapsed
--- b = begin ==  //begin value
--- c = change == //ending value
--- d = duration == duration secs
-local function outCirc(t, b, c, d)  return(c * math.sqrt(1 - math.pow((t / d) - 1, 2)) + b) end
-local function inCirc(t, b, c, d) return(-c * (math.sqrt(1 - math.pow(t / d, 2)) - 1) + b) end
-
-local endingTime=0
-local duration =0 
 local function onUpdate(self,elapsed)
 
-    TotalElapsed = TotalElapsed + elapsed
-    if TotalElapsed > 2 then
-        TotalElapsed=0
-        model:Hide()
-    end
-   -- if TotalElapsed >= UPDATE_INTERVAL thend
-      --  TotalElapsed = 0
-        local pulseSize = mouseSonarOpt.pulseSize
+	if g_totalElapsed == -1 or mouseSonarOpt.deactivated then
+		return;
+	elseif g_totalElapsed > PULSE_LIFE_TIME then
+		g_totalElapsed = -1;
+		g_circle:Hide();
+		return;
+	end
 
-        local cursorX, cursorY = GetCursorPosition()
-       
+	local alpha = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.startingAlphaValue);
+	g_texture:SetAlpha(alpha);
 
-        if cursorX == previousX and cursorY == previousY then
-           -- return
-        end
+	local pulseSizeThisFrame = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.pulseSize);
+	g_circle:SetWidth(pulseSizeThisFrame);
+	g_circle:SetHeight(pulseSizeThisFrame);
 
-         local pulse = outCirc(TotalElapsed,1,pulseSize,2)   
-         t:SetVertexColor(1, 1, 1 , 1-outCirc(TotalElapsed,0,1,2))
-        --local pulse = math.abs(math.sin(GetTime())) *128
-        
-        pulse=pulseSize-pulse
-	       
-        model:SetWidth(pulse) 
-        model:SetHeight(pulse)
-		    model:SetPoint("BOTTOMLEFT",(cursorX-pulse/2),cursorY-(pulse/2))
-        				
-        previousX = cursorX
-        previousY = cursorY
-    --end
+	local cursorX, cursorY = GetCursorPosition();
+	g_circle:SetPoint("BOTTOMLEFT", cursorX - (pulseSizeThisFrame * 0.5), cursorY - (pulseSizeThisFrame * 0.5));
 
+	g_totalElapsed = g_totalElapsed + elapsed;
 end
 
 
 
 
-local mouseSonar = CreateFrame("frame")
+local mouseSonar = CreateFrame("frame");
 mouseSonar:SetScript("OnEvent", function(self, event, ...)
-    self[event](self, ...)
-end)
-model:SetScript("OnUpdate", onUpdate)
+	self[event](self, ...);
+end);
+g_circle:SetScript("OnUpdate", onUpdate);
 mouseSonar:RegisterEvent("ADDON_LOADED");
-mouseSonar:RegisterEvent("CINEMATIC_START")
-mouseSonar:RegisterEvent("CINEMATIC_STOP")
-mouseSonar:RegisterEvent("SCREENSHOT_FAILED")
-mouseSonar:RegisterEvent("SCREENSHOT_SUCCEEDED")
-mouseSonar:RegisterEvent("PLAYER_REGEN_DISABLED")
-mouseSonar:RegisterEvent("PLAYER_REGEN_ENABLED")
+mouseSonar:RegisterEvent("CINEMATIC_START");
+mouseSonar:RegisterEvent("CINEMATIC_STOP");
+mouseSonar:RegisterEvent("SCREENSHOT_FAILED");
+mouseSonar:RegisterEvent("SCREENSHOT_SUCCEEDED");
+mouseSonar:RegisterEvent("PLAYER_REGEN_DISABLED");
+mouseSonar:RegisterEvent("PLAYER_REGEN_ENABLED");
 
 
 function mouseSonar:ADDON_LOADED(addon,...)
-  if addon == "mousesonar" then
-    if mouseSonarOpt == nil then
-      mouseSonarOpt = {}
-      mouseSonarOpt.pulseSize = 256
-      mouseSonarOpt.onlyCombat = true
-      mouseSonarOpt.onMouselook = true
-    end
-    createOptions()
-  end
+	if addon == "mousesonar" then
+		mouseSonarOpt =
+			{
+				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
+				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
+				startingAlphaValue = (mouseSonarOpt ~= nil and mouseSonarOpt.startingAlphaValue) or 1,
+				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
+				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
+				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
+			}
+		createOptions();
+	end
 end
 
 function mouseSonar:SCREENSHOT_FAILED()
-    RemoveHideCondition("Screenshot")
+	RemoveHideCondition("Screenshot");
 end
 
 function mouseSonar:PLAYER_REGEN_ENABLED( ... )
-  combate = false
+	g_combat = false;
 end
 
 function mouseSonar:PLAYER_REGEN_DISABLED( ... )
-  combate = true
+	g_combat = true;
 end
 
-mouseSonar.SCREENSHOT_SUCCEEDED = mouseSonar.SCREENSHOT_FAILED
+mouseSonar.SCREENSHOT_SUCCEEDED = mouseSonar.SCREENSHOT_FAILED;
 
 
 function mouseSonar:CINEMATIC_START()
-    AddHideCondition("Cinematic")
+	AddHideCondition("Cinematic");
 end
 
 function mouseSonar:CINEMATIC_STOP()
-    RemoveHideCondition("Cinematic")
+	RemoveHideCondition("Cinematic");
 end
 
 -- Hide during screenshots
 _G.hooksecurefunc("Screenshot", function()
-    AddHideCondition("Screenshot")
-end)
+	AddHideCondition("Screenshot");
+end);
 
 -- Hide while FMV movies play
 _G.MovieFrame:HookScript("OnShow", function()
-    AddHideCondition("Movie") -- FMV movie sequence, like the Wrathgate cinematic
-end)
+	AddHideCondition("Movie") -- FMV movie sequence, like the Wrathgate cinematic
+end);
 
 _G.MovieFrame:HookScript("OnHide", function()
-    RemoveHideCondition("Movie")
-end)
+	RemoveHideCondition("Movie");
+end);
 
 -- Hook camera movement to hide cursor effects
 _G.hooksecurefunc("CameraOrSelectOrMoveStart", function()
-    AddHideCondition("Camera")
-end)
+	AddHideCondition("Camera");
+end);
 
 _G.hooksecurefunc("CameraOrSelectOrMoveStop", function()
-    RemoveHideCondition("Camera")
-end)
+	RemoveHideCondition("Camera");
+end);
 
 
 
+function AddHideCondition(conditionName)
+	if not g_activeHideConditions[conditionName] then
+		g_activeHideConditions[conditionName] = true;
+		g_circle:Hide();
+	end
+end
 
+function RemoveHideCondition(conditionName)
+	if g_activeHideConditions[conditionName] then
+		g_activeHideConditions[conditionName] = nil;
 
-    function AddHideCondition(conditionName)
-        if not ActiveHideConditions[conditionName] then
-            ActiveHideConditions[conditionName] = true
-            model:Hide()
-        end
-    end
+		if next(g_activeHideConditions) == nil and mouseSonarOpt.onMouselook then
+			goPulse();
+		end
+	end
+end
 
-    function RemoveHideCondition(conditionName)
-        if ActiveHideConditions[conditionName] then
-            ActiveHideConditions[conditionName] = nil
+function goPulse()
+	if (g_combat or not mouseSonarOpt.onlyCombat) and (IsInRaid() or not mouseSonarOpt.onlyRaid) then
+		g_totalElapsed = 0;
+		g_circle:Show();
+	end
+end
 
-            if next(ActiveHideConditions) == nil then
-                TotalElapsed =0 
-
-                if combate or not mouseSonarOpt.onlyCombat then
-                  if mouseSonarOpt.onMouselook then 
-                    model:Show()
-                  end
-                end
-            end
-        end
-    end
-
-    function goPulse()
-      TotalElapsed =0 
-      model:Show()
-    end
-
-SlashCmdList["PULSE"] = function() goPulse() end
-SLASH_PULSE1="/pulse"
+SlashCmdList["PULSE"] = function() goPulse() end;
+SLASH_PULSE1 = "/pulse";
 
 
 --OPTIONS
 
-local function createLabel(frame, name)
-  local label = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-  label:SetText(name)
-  return label
+local function createLabel(name)
+	local label = g_mouseSonarOptPanel.panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight");
+	label:SetText(name);
+	return label;
 end
-local function createCheck(frame, key, wth, hgt)
-  local chkOpt = CreateFrame("CheckButton", "mousesonar" .. key, frame, "OptionsCheckButtonTemplate")
-  chkOpt:SetWidth(wth)
-  chkOpt:SetHeight(hgt)
-  return chkOpt
+local function createCheck(key, wth, hgt)
+	local chkOpt = CreateFrame("CheckButton", "mousesonar_" .. key, g_mouseSonarOptPanel.panel, "OptionsCheckButtonTemplate");
+	chkOpt:SetWidth(wth);
+	chkOpt:SetHeight(hgt);
+	return chkOpt;
 end
-local function createSlider(name, x, y, min, max, step,frame)
-  local sliderOpt = CreateFrame("Slider", "mousesonar" .. name, frame, "OptionsSliderTemplate")
-  sliderOpt:SetWidth(x)
-  sliderOpt:SetHeight(y)
-  sliderOpt:SetMinMaxValues(min, max)
-  sliderOpt:SetValueStep(step)
-  _G[sliderOpt:GetName() .. "Low"]:SetText('64')
-  _G[sliderOpt:GetName() .. "High"]:SetText('1024')
-  _G[sliderOpt:GetName() .. 'Text']:SetText('Pulse Size')
-  return sliderOpt
+local function createSlider(name, x, y, min, max, step)
+	local sliderOpt = CreateFrame("Slider", "mousesonar_" .. name, g_mouseSonarOptPanel.panel, "OptionsSliderTemplate");
+	sliderOpt:SetWidth(x);
+	sliderOpt:SetHeight(y);
+	sliderOpt:SetMinMaxValues(min, max);
+	sliderOpt:SetValueStep(step);
+	_G[sliderOpt:GetName() .. "Low"]:SetText(min);
+	_G[sliderOpt:GetName() .. "High"]:SetText(max);
+	_G[sliderOpt:GetName() .. "Text"]:SetText(name);
+	return sliderOpt
 end
 
 function createOptions()
-  mouseSonarOptPanel.panel = CreateFrame( "Frame", "Mouse Sonar Options", UIParent );
-  mouseSonarOptPanel.panel.name = "Mouse Sonar Options";
-  mouseSonarOptPanel.lab = createLabel(mouseSonarOptPanel.panel, "Show Only inCombat")
-  mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -48)
-  mouseSonarOptPanel.chk = createCheck(mouseSonarOptPanel.panel, "chkincombat", 20, 20)
-  mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -45)
-  if (mouseSonarOpt.onlyCombat) then
-    mouseSonarOptPanel.chk:SetChecked(true)
-  end
-  mouseSonarOptPanel.chk:SetScript("OnClick", function()
-            if(mouseSonarOpt.onlyCombat) then
-              mouseSonarOpt.onlyCombat = false
-            else
-              mouseSonarOpt.onlyCombat = true
-            end
-          end)
+	g_mouseSonarOptPanel.panel = CreateFrame( "Frame", "Mouse Sonar Options", UIParent);
+	g_mouseSonarOptPanel.panel.name = "Mouse Sonar Options";
 
 
-  mouseSonarOptPanel.lab = createLabel(mouseSonarOptPanel.panel, "Show on Mouselook end")
-  mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88)
-  mouseSonarOptPanel.chk = createCheck(mouseSonarOptPanel.panel, "chkMouselook", 20, 20)
-  mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85)
-  if (mouseSonarOpt.onMouselook) then
-    mouseSonarOptPanel.chk:SetChecked(true)
-  end
-  mouseSonarOptPanel.chk:SetScript("OnClick", function()
-            if(mouseSonarOpt.onMouselook) then
-              mouseSonarOpt.onMouselook = false
-            else
-              mouseSonarOpt.onMouselook = true
-            end
-          end)
+	-- DEACTIVATED
+	g_mouseSonarOptPanel.lab = createLabel("Deactivated");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -48);
+	g_mouseSonarOptPanel.chk = createCheck("chkDeactivate", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -45);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.deactivated);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.deactivated = not mouseSonarOpt.deactivated;
+	end);
 
 
+	-- ONLY IN COMBAT
+	g_mouseSonarOptPanel.lab = createLabel("Show only in Combat");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -68);
+	g_mouseSonarOptPanel.chk = createCheck("chkOnlyInCombat", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -65);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyCombat);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.onlyCombat = not mouseSonarOpt.onlyCombat;
+	end)
+
+	-- ONLY IN RAID
+	g_mouseSonarOptPanel.lab = createLabel("Show only while in raid group");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
+	g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyRaid);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.onlyRaid = not mouseSonarOpt.onlyRaid;
+	end)
 
 
+	-- MOUSE LOOK END
+	g_mouseSonarOptPanel.lab = createLabel("Show on Mouselook end");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
+	g_mouseSonarOptPanel.chk = createCheck("chkMouselook", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onMouselook);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.onMouselook = not mouseSonarOpt.onMouselook;
+	end);
 
 
-  mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 64, 1024, 32,mouseSonarOptPanel.panel)
-  mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize)
-  mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -125)
-  mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
-    mouseSonarOpt.pulseSize = value
-    goPulse()
-  end)
+	-- PULSE SIZE
+	g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 64, 1024, 32);
+	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -145);
+
+	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
+		mouseSonarOpt.pulseSize = value;
+		goPulse();
+	end);
+
+	-- STARTING ALPHA VALUE
+	g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15, 0, 255, 1);
+	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -185);
+
+	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
+		mouseSonarOpt.startingAlphaValue = value / 255;
+		goPulse();
+	end);
 
 
+	g_mouseSonarOptPanel.helpText = createLabel("You can Keybind or macro /pulse to Pulse Manually");
+	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -225);
 
-  
-  mouseSonarOptPanel.helpText=createLabel(mouseSonarOptPanel.panel, "You can Keybind or macro /pulse to Pulse Manually")
-  mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -165)
-
-
-  InterfaceOptions_AddCategory(mouseSonarOptPanel.panel);
-
-  
+	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- --[[
- -- Make a child panel
- mouseSonarOpt.childpanel = CreateFrame( "Frame", "mouseSonarOptChild", mouseSonarOpt.panel);
- mouseSonarOpt.childpanel.name = "MyChild";
- -- Specify childness of this panel (this puts it under the little red [+], instead of giving it a normal AddOn category)
- mouseSonarOpt.childpanel.parent = mouseSonarOpt.panel.name;
- -- Add the child to the Interface Options
- InterfaceOptions_AddCategory(mouseSonarOpt.childpanel);
- ]]
