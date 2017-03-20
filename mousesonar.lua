@@ -51,7 +51,7 @@ local function UpdatePulse(elapsed)
 	local alpha = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.startingAlphaValue);
 	g_texture:SetAlpha(alpha);
 
-  local pulseSizeThisFrame = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.pulseSize);
+	local pulseSizeThisFrame = SquareInvertFunc(g_totalElapsed, mouseSonarOpt.pulseSize);
 	g_circle:SetWidth(pulseSizeThisFrame);
 	g_circle:SetHeight(pulseSizeThisFrame);
 
@@ -102,7 +102,7 @@ end
 
 
 local function refreshPulseColor()
-  g_texture:SetVertexColor(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3])
+	g_texture:SetVertexColor(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3])
 end
 
 
@@ -131,10 +131,10 @@ function mouseSonar:ADDON_LOADED(addon,...)
 				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
 				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
-        colorValue = (mouseSonarOpt ~= nil and mouseSonarOpt.colorValue) or {1,1,1},
+				colorValue = (mouseSonarOpt ~= nil and mouseSonarOpt.colorValue) or {1,1,1},
 			}
 		createOptions();
-    refreshPulseColor();
+		refreshPulseColor();
 	end
 end
 
@@ -254,47 +254,47 @@ local function createSlider(name, x, y, min, max, step)
 end
 
 local function showColorPicker(r,g,b,a,callback)
-  ColorPickerFrame:SetColorRGB(r,g,b)
-  ColorPickerFrame.hasOpacity = false
-  ColorPickerFrame.opacity = (a ~= nil), a
-  ColorPickerFrame.previousValues = {r,g,b,a}
-  ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = callback, callback, callback
-  ColorPickerFrame:Hide() -- Need to run the OnShow handler.
-  ColorPickerFrame:Show()
+	ColorPickerFrame:SetColorRGB(r,g,b)
+	ColorPickerFrame.hasOpacity = false
+	ColorPickerFrame.opacity = (a ~= nil), a
+	ColorPickerFrame.previousValues = {r,g,b,a}
+	ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = callback, callback, callback
+	ColorPickerFrame:Hide() -- Need to run the OnShow handler.
+	ColorPickerFrame:Show()
 end
 
 
 local function createColorSelect(name,...)
-  --frame
-  local f = CreateFrame("FRAME","mousesonar_" .. name,g_mouseSonarOptPanel.panel)
-  f:SetSize(25,25)
-  f:SetPoint("CENTER",0,0)
-  --texture
-  f.tex = f:CreateTexture(nil,"BACKGROUND")
-  f.tex:SetAllPoints(f)
-  f.tex:SetColorTexture(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3],1)
-  --recolor callback function
-  f.recolorTexture = function(oldColor)
-    local r,g,b,a;
-    if not oldColor then
-      r,g,b = ColorPickerFrame:GetColorRGB();
-      a = 1;
-      f.tex:SetVertexColor(r,g,b,a);
-      mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3] = r,g,b;
-      refreshPulseColor();
-    else
-      f.tex:SetVertexColor(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3],1);
-    end
-  end
-  f:EnableMouse(true)
-  f:SetScript("OnMouseDown", function(self,button,...)
-    if button == "LeftButton" then
-      local r,g,b = mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3]
-      showColorPicker(r,g,b,1,self.recolorTexture)
-    end
-  end)
+	--frame
+	local f = CreateFrame("FRAME","mousesonar_" .. name,g_mouseSonarOptPanel.panel)
+	f:SetSize(25,25)
+	f:SetPoint("CENTER",0,0)
+	--texture
+	f.tex = f:CreateTexture(nil,"BACKGROUND")
+	f.tex:SetAllPoints(f)
+	f.tex:SetColorTexture(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3],1)
+	--recolor callback function
+	f.recolorTexture = function(oldColor)
+		local r,g,b,a;
+		if not oldColor then
+			r,g,b = ColorPickerFrame:GetColorRGB();
+			a = 1;
+			f.tex:SetVertexColor(r,g,b,a);
+			mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3] = r,g,b;
+			refreshPulseColor();
+		else
+			f.tex:SetVertexColor(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3],1);
+		end
+	end
+	f:EnableMouse(true)
+	f:SetScript("OnMouseDown", function(self,button,...)
+		if button == "LeftButton" then
+			local r,g,b = mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3]
+			showColorPicker(r,g,b,1,self.recolorTexture)
+		end
+	end)
 
-  return f
+	return f
 end
 
 function createOptions()
@@ -387,10 +387,10 @@ function createOptions()
 	end);
 
 
-  g_mouseSonarOptPanel.lab = createLabel("Color");
-  g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 90, -255);
-  g_mouseSonarOptPanel.clr = createColorSelect("ColorSelect");
-  g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", 60, -245);
+	g_mouseSonarOptPanel.lab = createLabel("Color");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 90, -255);
+	g_mouseSonarOptPanel.clr = createColorSelect("ColorSelect");
+	g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", 60, -245);
 
 
 	g_mouseSonarOptPanel.helpText = createLabel("You can Keybind or macro /pulse to Pulse Manually");
