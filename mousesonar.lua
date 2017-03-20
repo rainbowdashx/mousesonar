@@ -16,6 +16,7 @@ BINDING_NAME_MOUSESONAR = "Pulse";
 local g_mouseSonarOptPanel = {};
 local g_activeHideConditions = {};
 local g_combat = false;
+local g_circleInitialized = false;
 
 local g_circle = CreateFrame("Model", nil, self);
 g_circle:SetWidth(0);
@@ -35,9 +36,9 @@ local function SquareInvertFunc(elapsedTime, startingValue)
 	return value * startingValue;
 end
 
-local function onUpdate(self,elapsed)
+local function UpdatePulse(elapsed)
 
-	if g_totalElapsed == -1 or mouseSonarOpt.deactivated then
+	if g_totalElapsed == -1 then
 		return;
 	elseif g_totalElapsed > PULSE_LIFE_TIME then
 		g_totalElapsed = -1;
@@ -57,6 +58,45 @@ local function onUpdate(self,elapsed)
 	g_circle:SetPoint("BOTTOMLEFT", cursorX - (pulseSizeThisFrame * 0.5), cursorY - (pulseSizeThisFrame * 0.5));
 
 	g_totalElapsed = g_totalElapsed + elapsed;
+end
+
+local function UpdateAlwaysVisible()
+
+	if not g_circleInitialized then
+
+		g_circle:SetWidth(mouseSonarOpt.pulseSize);
+		g_circle:SetHeight(mouseSonarOpt.pulseSize);
+		g_texture:SetAlpha(mouseSonarOpt.startingAlphaValue);
+
+		g_circleInitialized = true;
+	end
+
+	if mouseSonarOpt.onlyCombat then
+
+		local isVisible = g_circle:IsVisible();
+
+		if not g_combat and isVisible then
+			g_circle:Hide();
+		elseif g_combat and not isVisible then
+			g_circle:Show();
+		end
+	end
+
+	local cursorX, cursorY = GetCursorPosition();
+	g_circle:SetPoint("BOTTOMLEFT", cursorX - (mouseSonarOpt.pulseSize * 0.5), cursorY - (mouseSonarOpt.pulseSize * 0.5));
+end
+
+local function onUpdate(self, elapsed)
+
+	if mouseSonarOpt.deactivated then
+		return;
+	end
+
+	if mouseSonarOpt.alwaysVisible then
+		UpdateAlwaysVisible();
+	else
+		UpdatePulse(elapsed);
+	end
 end
 
 
@@ -81,12 +121,12 @@ function mouseSonar:ADDON_LOADED(addon,...)
 		mouseSonarOpt =
 			{
 				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
+				alwaysVisible = (mouseSonarOpt ~= nil and mouseSonarOpt.alwaysVisible) or false,
 				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
 				startingAlphaValue = (mouseSonarOpt ~= nil and mouseSonarOpt.startingAlphaValue) or 1,
 				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
 				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
-        ConstantCircle = (mouseSonarOpt ~= nil and mouseSonarOpt.ConstantCircle) or false,
 			}
 		createOptions();
 	end
@@ -102,6 +142,7 @@ end
 
 function mouseSonar:PLAYER_REGEN_DISABLED( ... )
 	g_combat = true;
+	ToggleAlwaysVisible();
 end
 
 mouseSonar.SCREENSHOT_SUCCEEDED = mouseSonar.SCREENSHOT_FAILED;
@@ -143,9 +184,7 @@ end);
 function AddHideCondition(conditionName)
 	if not g_activeHideConditions[conditionName] then
 		g_activeHideConditions[conditionName] = true;
-    if not mouseSonarOpt.ConstantCircle then
-		  g_circle:Hide();
-    end
+		g_circle:Hide();
 	end
 end
 
@@ -155,19 +194,31 @@ function RemoveHideCondition(conditionName)
 		g_activeHideConditions[conditionName] = nil;
 
 		if next(g_activeHideConditions) == nil and mouseSonarOpt.onMouselook then
-			goPulse();
+			ShowCircle();
 		end
 	end
 end
 
-function goPulse()
+function ShowCircle()
 	if (g_combat or not mouseSonarOpt.onlyCombat) and (IsInRaid() or not mouseSonarOpt.onlyRaid) then
+
 		g_totalElapsed = 0;
+		g_circleInitialized = false;
 		g_circle:Show();
 	end
 end
 
-SlashCmdList["PULSE"] = function() goPulse() end;
+function ToggleAlwaysVisible()
+
+	if mouseSonarOpt.alwaysVisible and not mouseSonarOpt.deactivated and (not mouseSonarOpt.onlyCombat or g_combat) and (not mouseSonarOpt.onlyRaid or IsInRaid()) then
+		ShowCircle();
+		return true;
+	end
+
+	return false;
+end
+
+SlashCmdList["PULSE"] = function() ShowCircle() end;
 SLASH_PULSE1 = "/pulse";
 
 
@@ -210,43 +261,42 @@ function createOptions()
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
 		mouseSonarOpt.deactivated = not mouseSonarOpt.deactivated;
+
+		if not ToggleAlwaysVisible() then
+			g_circle:Hide();
+		end
 	end);
 
---[[
---CONSTANT CHECK BOX
-  g_mouseSonarOptPanel.lab = createLabel("Constant Circle")
-  g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -208)
-  g_mouseSonarOptPanel.chk = createCheck("chkConstantCircle", 20, 20)
-  g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -205)
-  if (mouseSonarOpt.ConstantCircle) then
-    g_mouseSonarOptPanel.chk:SetChecked(true)
-  end
-  g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
-            if(mouseSonarOpt.ConstantCircle) then
-              mouseSonarOpt.ConstantCircle = false
-            else
-              mouseSonarOpt.ConstantCircle = true
-            end
-          end)
 
-]]
+	-- ALWAYS VISIBLE
+	g_mouseSonarOptPanel.lab = createLabel("Circle always visible");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -68);
+	g_mouseSonarOptPanel.chk = createCheck("chkAlwaysVisible", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -65);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.alwaysVisible);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.alwaysVisible = not mouseSonarOpt.alwaysVisible;
+		ToggleAlwaysVisible();
+	end);
 
 	-- ONLY IN COMBAT
 	g_mouseSonarOptPanel.lab = createLabel("Show only in Combat");
-	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -68);
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
 	g_mouseSonarOptPanel.chk = createCheck("chkOnlyInCombat", 20, 20);
-	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -65);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85);
 	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyCombat);
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
 		mouseSonarOpt.onlyCombat = not mouseSonarOpt.onlyCombat;
+		ToggleAlwaysVisible();
 	end)
 
 	-- ONLY IN RAID
 	g_mouseSonarOptPanel.lab = createLabel("Show only while in raid group");
-	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
 	g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
-	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
 	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyRaid);
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -256,9 +306,9 @@ function createOptions()
 
 	-- MOUSE LOOK END
 	g_mouseSonarOptPanel.lab = createLabel("Show on Mouselook end");
-	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -128);
 	g_mouseSonarOptPanel.chk = createCheck("chkMouselook", 20, 20);
-	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -125);
 	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onMouselook);
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -269,28 +319,26 @@ function createOptions()
 	-- PULSE SIZE
 	g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 64, 1024, 32);
 	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize);
-	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -145);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -165);
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.pulseSize = value;
-		goPulse();
+		ShowCircle();
 	end);
 
 	-- STARTING ALPHA VALUE
 	g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15, 0, 255, 1);
 	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
-	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -185);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -205);
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.startingAlphaValue = value / 255;
-		goPulse();
+		ShowCircle();
 	end);
 
 
 	g_mouseSonarOptPanel.helpText = createLabel("You can Keybind or macro /pulse to Pulse Manually");
-	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -225);
+	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -245);
 
 	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
-
-
