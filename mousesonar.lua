@@ -127,7 +127,6 @@ function mouseSonar:ADDON_LOADED(addon,...)
 				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
 				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
-        ConstantCircle = (mouseSonarOpt ~= nil and mouseSonarOpt.ConstantCircle) or false,
 			}
 		createOptions();
 	end
@@ -185,9 +184,7 @@ end);
 function AddHideCondition(conditionName)
 	if not g_activeHideConditions[conditionName] then
 		g_activeHideConditions[conditionName] = true;
-    if not mouseSonarOpt.ConstantCircle then
-		  g_circle:Hide();
-    end
+		g_circle:Hide();
 	end
 end
 
@@ -283,25 +280,6 @@ function createOptions()
 		ToggleAlwaysVisible();
 	end);
 
---[[
---CONSTANT CHECK BOX
-  g_mouseSonarOptPanel.lab = createLabel("Constant Circle")
-  g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -208)
-  g_mouseSonarOptPanel.chk = createCheck("chkConstantCircle", 20, 20)
-  g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -205)
-  if (mouseSonarOpt.ConstantCircle) then
-    g_mouseSonarOptPanel.chk:SetChecked(true)
-  end
-  g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
-            if(mouseSonarOpt.ConstantCircle) then
-              mouseSonarOpt.ConstantCircle = false
-            else
-              mouseSonarOpt.ConstantCircle = true
-            end
-          end)
-
-]]
-
 	-- ONLY IN COMBAT
 	g_mouseSonarOptPanel.lab = createLabel("Show only in Combat");
 	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
@@ -364,5 +342,3 @@ function createOptions()
 
 	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
-
-
