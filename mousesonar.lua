@@ -292,3 +292,4 @@ function createOptions()
 
 	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
+
