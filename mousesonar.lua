@@ -72,16 +72,20 @@ local function UpdateAlwaysVisible()
 		g_circleInitialized = true;
 	end
 
-	if mouseSonarOpt.onlyCombat then
 
-		local isVisible = g_circle:IsVisible();
+	-- TOGGLE VISIBLE
+	local combatOK = not mouseSonarOpt.onlyCombat or g_combat;
+	local raidOK = not mouseSonarOpt.onlyRaid or IsInRaid();
+	local canBeShown = combatOK and raidOK;
 
-		if not g_combat and isVisible then
-			g_circle:Hide();
-		elseif g_combat and not isVisible then
-			g_circle:Show();
-		end
+	local isCurrentlyVisible = g_circle:IsVisible();
+
+	if not isCurrentlyVisible and canBeShown then
+		g_circle:Show();
+	elseif isCurrentlyVisible and not canBeShown then
+		g_circle:Hide();
 	end
+
 
 	local cursorX, cursorY = GetCursorPosition();
 	g_circle:SetPoint("BOTTOMLEFT", cursorX - (mouseSonarOpt.pulseSize * 0.5), cursorY - (mouseSonarOpt.pulseSize * 0.5));
@@ -124,17 +128,18 @@ function mouseSonar:ADDON_LOADED(addon,...)
 	if addon == "mousesonar" then
 		mouseSonarOpt =
 			{
-				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
-				alwaysVisible = (mouseSonarOpt ~= nil and mouseSonarOpt.alwaysVisible) or false,
+				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or (mouseSonarOpt == nil and false),
+				alwaysVisible = (mouseSonarOpt ~= nil and mouseSonarOpt.alwaysVisible) or (mouseSonarOpt == nil and false),
 				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
 				startingAlphaValue = (mouseSonarOpt ~= nil and mouseSonarOpt.startingAlphaValue) or 1,
-				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
-				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
-				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
+				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or (mouseSonarOpt == nil and true),
+				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or (mouseSonarOpt == nil and false),
+				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or (mouseSonarOpt == nil and true),
 				colorValue = (mouseSonarOpt ~= nil and mouseSonarOpt.colorValue) or {1,1,1},
 			}
 		createOptions();
 		refreshPulseColor();
+		ToggleAlwaysVisible();
 	end
 end
 
@@ -351,6 +356,7 @@ function createOptions()
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
 		mouseSonarOpt.onlyRaid = not mouseSonarOpt.onlyRaid;
+		ToggleAlwaysVisible();
 	end)
 
 
