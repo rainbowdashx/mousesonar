@@ -1,6 +1,6 @@
 ## Interface: 70100
 ## Title: mouse sonar
-## Version: 1.0
+## Version: 1.2
 ## Author: Morf
 ## SavedVariables: mouseSonarOpt
 
