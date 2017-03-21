@@ -72,16 +72,20 @@ local function UpdateAlwaysVisible()
 		g_circleInitialized = true;
 	end
 
-	if mouseSonarOpt.onlyCombat then
 
-		local isVisible = g_circle:IsVisible();
+	-- TOGGLE VISIBLE
+	local combatOK = not mouseSonarOpt.onlyCombat or g_combat;
+	local raidOK = not mouseSonarOpt.onlyRaid or IsInRaid();
+	local canBeShown = combatOK and raidOK;
 
-		if not g_combat and isVisible then
-			g_circle:Hide();
-		elseif g_combat and not isVisible then
-			g_circle:Show();
-		end
+	local isCurrentlyVisible = g_circle:IsVisible();
+
+	if not isCurrentlyVisible and canBeShown then
+		g_circle:Show();
+	elseif isCurrentlyVisible and not canBeShown then
+		g_circle:Hide();
 	end
+
 
 	local cursorX, cursorY = GetCursorPosition();
 	g_circle:SetPoint("BOTTOMLEFT", cursorX - (mouseSonarOpt.pulseSize * 0.5), cursorY - (mouseSonarOpt.pulseSize * 0.5));
@@ -102,7 +106,7 @@ end
 
 
 local function refreshPulseColor()
-	g_texture:SetVertexColor(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3])
+	g_texture:SetVertexColor(mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3])
 end
 
 
@@ -124,17 +128,18 @@ function mouseSonar:ADDON_LOADED(addon,...)
 	if addon == "mousesonar" then
 		mouseSonarOpt =
 			{
-				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or false,
-				alwaysVisible = (mouseSonarOpt ~= nil and mouseSonarOpt.alwaysVisible) or false,
+				deactivated = (mouseSonarOpt ~= nil and mouseSonarOpt.deactivated) or (mouseSonarOpt == nil and false),
+				alwaysVisible = (mouseSonarOpt ~= nil and mouseSonarOpt.alwaysVisible) or (mouseSonarOpt == nil and false),
 				pulseSize = (mouseSonarOpt ~= nil and mouseSonarOpt.pulseSize) or 256,
 				startingAlphaValue = (mouseSonarOpt ~= nil and mouseSonarOpt.startingAlphaValue) or 1,
-				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or true,
-				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or false,
-				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or true,
+				onlyCombat = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyCombat) or (mouseSonarOpt == nil and true),
+				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or (mouseSonarOpt == nil and false),
+				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or (mouseSonarOpt == nil and true),
 				colorValue = (mouseSonarOpt ~= nil and mouseSonarOpt.colorValue) or {1,1,1},
 			}
 		createOptions();
 		refreshPulseColor();
+		ToggleAlwaysVisible();
 	end
 end
 
@@ -250,47 +255,50 @@ local function createSlider(name, x, y, min, max, step)
 	_G[sliderOpt:GetName() .. "Low"]:SetText(min);
 	_G[sliderOpt:GetName() .. "High"]:SetText(max);
 	_G[sliderOpt:GetName() .. "Text"]:SetText(name);
-	return sliderOpt
+	return sliderOpt;
 end
 
 local function showColorPicker(r,g,b,a,callback)
-	ColorPickerFrame:SetColorRGB(r,g,b)
-	ColorPickerFrame.hasOpacity = false
-	ColorPickerFrame.opacity = (a ~= nil), a
-	ColorPickerFrame.previousValues = {r,g,b,a}
-	ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = callback, callback, callback
-	ColorPickerFrame:Hide() -- Need to run the OnShow handler.
-	ColorPickerFrame:Show()
+	ColorPickerFrame:SetColorRGB(r,g,b);
+	ColorPickerFrame.hasOpacity = false;
+	ColorPickerFrame.opacity = (a ~= nil), a;
+	ColorPickerFrame.previousValues = {r,g,b,a};
+	ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc = callback, callback, callback;
+	ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
+	ColorPickerFrame:Show();
 end
 
 
 local function createColorSelect(name,...)
 	--frame
-	local f = CreateFrame("FRAME","mousesonar_" .. name,g_mouseSonarOptPanel.panel)
-	f:SetSize(25,25)
-	f:SetPoint("CENTER",0,0)
+	local f = CreateFrame("FRAME","mousesonar_" .. name,g_mouseSonarOptPanel.panel);
+	f:SetSize(25,25);
+	f:SetPoint("CENTER",0,0);
+
 	--texture
-	f.tex = f:CreateTexture(nil,"BACKGROUND")
-	f.tex:SetAllPoints(f)
-	f.tex:SetColorTexture(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3],1)
+	f.tex = f:CreateTexture(nil,"BACKGROUND");
+	f.tex:SetAllPoints(f);
+	f.tex:SetColorTexture(mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3], 1);
+
 	--recolor callback function
 	f.recolorTexture = function(oldColor)
 		local r,g,b,a;
 		if not oldColor then
 			r,g,b = ColorPickerFrame:GetColorRGB();
 			a = 1;
-			f.tex:SetVertexColor(r,g,b,a);
-			mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3] = r,g,b;
+			f.tex:SetColorTexture(r,g,b,a);
+			mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3] = r,g,b;
 			refreshPulseColor();
 		else
-			f.tex:SetVertexColor(mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3],1);
+			f.tex:SetColorTexture(mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3], 1);
 		end
 	end
+
 	f:EnableMouse(true)
 	f:SetScript("OnMouseDown", function(self,button,...)
 		if button == "LeftButton" then
-			local r,g,b = mouseSonarOpt.colorValue[1],mouseSonarOpt.colorValue[2],mouseSonarOpt.colorValue[3]
-			showColorPicker(r,g,b,1,self.recolorTexture)
+			local r,g,b = mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3];
+			showColorPicker(r,g,b,1,self.recolorTexture);
 		end
 	end)
 
@@ -351,6 +359,7 @@ function createOptions()
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
 		mouseSonarOpt.onlyRaid = not mouseSonarOpt.onlyRaid;
+		ToggleAlwaysVisible();
 	end)
 
 
@@ -376,6 +385,7 @@ function createOptions()
 		ShowCircle();
 	end);
 
+
 	-- STARTING ALPHA VALUE
 	g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15, 0, 255, 1);
 	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
@@ -387,6 +397,7 @@ function createOptions()
 	end);
 
 
+	-- COLOR
 	g_mouseSonarOptPanel.lab = createLabel("Color");
 	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 90, -255);
 	g_mouseSonarOptPanel.clr = createColorSelect("ColorSelect");
