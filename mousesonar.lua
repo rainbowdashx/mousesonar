@@ -382,7 +382,7 @@ function createOptions()
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.pulseSize = value;
-		ShowCircle();
+		ShowCircle(1);
 	end);
 
 
@@ -393,7 +393,7 @@ function createOptions()
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.startingAlphaValue = value / 255;
-		ShowCircle();
+		ShowCircle(1);
 	end);
 
 
