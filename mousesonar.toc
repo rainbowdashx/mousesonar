@@ -1,4 +1,4 @@
-## Interface: 70100
+## Interface: 70200
 ## Title: mouse sonar
 ## Version: 1.2
 ## Author: Morf
