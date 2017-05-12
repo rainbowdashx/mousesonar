@@ -1,5 +1,7 @@
 <Bindings>
-  <Binding name="MOUSESONAR" description="Pulse"  header="MOUSESONAR">
+  <Binding name="FINDMOUSE"  header="MOUSESONAR">
   		ShowCircle(1)
   </Binding>
 </Bindings>
+
+

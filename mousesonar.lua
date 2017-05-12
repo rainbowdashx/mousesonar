@@ -11,7 +11,7 @@ _G.CreateFrame("Frame"):SetScript("OnUpdate", function(self, elapsed)
 end)
 
 BINDING_HEADER_MOUSESONAR = "Mouse Sonar";
-BINDING_NAME_MOUSESONAR = "Pulse";
+BINDING_NAME_FINDMOUSE = "Find Mouse";
 
 local g_mouseSonarOptPanel = {};
 local g_activeHideConditions = {};
