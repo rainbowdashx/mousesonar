@@ -136,7 +136,9 @@ function mouseSonar:ADDON_LOADED(addon,...)
 				onlyRaid = (mouseSonarOpt ~= nil and mouseSonarOpt.onlyRaid) or (mouseSonarOpt == nil and false),
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or (mouseSonarOpt == nil and true),
 				colorValue = (mouseSonarOpt ~= nil and mouseSonarOpt.colorValue) or {1,1,1},
+				HollowCircle = (mouseSonarOpt ~= nil and mouseSonarOpt.HollowCircle) or (mouseSonarOpt == nil and false),
 			}
+		UpdatePulseTexture();
 		createOptions();
 		refreshPulseColor();
 		ToggleAlwaysVisible();
@@ -305,6 +307,14 @@ local function createColorSelect(name,...)
 	return f
 end
 
+function UpdatePulseTexture()
+	if mouseSonarOpt.HollowCircle then
+		g_texture:SetTexture("Interface\\AddOns\\mousesonar\\Circle_Hollow");
+	else
+		g_texture:SetTexture("Interface\\AddOns\\mousesonar\\Circle_White");
+	end
+end
+
 function createOptions()
 	g_mouseSonarOptPanel.panel = CreateFrame( "Frame", "Mouse Sonar Options", UIParent);
 	g_mouseSonarOptPanel.panel.name = "Mouse Sonar Options";
@@ -374,11 +384,23 @@ function createOptions()
 		mouseSonarOpt.onMouselook = not mouseSonarOpt.onMouselook;
 	end);
 
+	-- HOLLOW CIRCLE OPTION
+	g_mouseSonarOptPanel.lab = createLabel("Show as Hollow Circle");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -148);
+	g_mouseSonarOptPanel.chk = createCheck("chkHollowCircle", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -145);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.HollowCircle);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.HollowCircle = not mouseSonarOpt.HollowCircle;
+		UpdatePulseTexture();
+	end);
+
 
 	-- PULSE SIZE
-	g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 64, 1024, 32);
+	g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 16, 1024, 32);
 	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize);
-	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -165);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -205);
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.pulseSize = value;
@@ -389,7 +411,7 @@ function createOptions()
 	-- STARTING ALPHA VALUE
 	g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15, 0, 255, 1);
 	g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
-	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -205);
+	g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -255);
 
 	g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
 		mouseSonarOpt.startingAlphaValue = value / 255;
@@ -399,13 +421,13 @@ function createOptions()
 
 	-- COLOR
 	g_mouseSonarOptPanel.lab = createLabel("Color");
-	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 90, -255);
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 90, -300);
 	g_mouseSonarOptPanel.clr = createColorSelect("ColorSelect");
-	g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", 60, -245);
+	g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", 60, -285);
 
 
 	g_mouseSonarOptPanel.helpText = createLabel("You can Keybind or macro /pulse to Pulse Manually");
-	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -285);
+	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -325);
 
 	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
