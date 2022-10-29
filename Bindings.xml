@@ -1,5 +1,5 @@
 <Bindings>
-  <Binding name="FINDMOUSE"  header="MOUSESONAR">
+  <Binding name="FINDMOUSE"  header="MOUSESONAR" runOnUp="false" category="Mouse Sonar">
   		ShowCircle(1)
   </Binding>
 </Bindings>

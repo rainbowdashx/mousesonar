@@ -243,7 +243,7 @@ local function createLabel(name)
 	return label;
 end
 local function createCheck(key, wth, hgt)
-	local chkOpt = CreateFrame("CheckButton", "mousesonar_" .. key, g_mouseSonarOptPanel.panel, "OptionsCheckButtonTemplate");
+	local chkOpt = CreateFrame("CheckButton", "mousesonar_" .. key, g_mouseSonarOptPanel.panel, "InterfaceOptionsCheckButtonTemplate");
 	chkOpt:SetWidth(wth);
 	chkOpt:SetHeight(hgt);
 	return chkOpt;
