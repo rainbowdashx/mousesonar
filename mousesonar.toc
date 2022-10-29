@@ -1,4 +1,4 @@
-## Interface: 90200
+## Interface: 100000
 ## Title: mouse sonar
 ## Version: 1.2
 ## Author: Morf
