@@ -8,6 +8,8 @@ _G.CreateFrame("Frame"):SetScript("OnUpdate", function(self, elapsed)
 	else
 		RemoveHideCondition("Mouselook");
 	end
+
+	ON_UPDATE();
 end)
 
 BINDING_HEADER_MOUSESONAR = "Mouse Sonar";
@@ -17,6 +19,9 @@ local g_mouseSonarOptPanel = {};
 local g_activeHideConditions = {};
 local g_combat = false;
 local g_circleInitialized = false;
+local g_mouseHistory = {};
+local g_mouseHistoryMaxSize = 30;
+local g_lastHistoryUpdateTime = 0;
 
 local g_circle = CreateFrame("Model", nil, self);
 g_circle:SetWidth(0);
@@ -91,6 +96,87 @@ local function UpdateAlwaysVisible()
 	g_circle:SetPoint("BOTTOMLEFT", cursorX - (mouseSonarOpt.pulseSize * 0.5), cursorY - (mouseSonarOpt.pulseSize * 0.5));
 end
 
+local function removeOldEntries()
+
+	local timeNow = GetTime();
+	local timeThreshold = timeNow - 0.5;
+
+	local lastEntry = nil;
+	for i, entry in ipairs(g_mouseHistory) do
+		if entry.time < timeThreshold then
+			table.remove(g_mouseHistory, i);
+		end
+	end
+	
+end
+
+local function pushHistoryEntry() 
+	local cursorX, cursorY = GetCursorPosition();
+
+	local entry = {
+		x = cursorX,
+		y = cursorY,
+		time = GetTime(),
+	};
+
+	table.insert(g_mouseHistory, entry);
+
+	if #g_mouseHistory > g_mouseHistoryMaxSize then
+		table.remove(g_mouseHistory, 1);
+	end
+
+	g_lastHistoryEntryTime = GetTime();
+
+	removeOldEntries();
+end
+
+
+local function checkIfMouseShake() 
+
+	local numChanges = 0;
+	local timeNow = GetTime();
+	local timeThreshold = timeNow - 0.5;
+	local lastDirection = nil;
+	local lastEntry = nil;
+
+	for i, entry in ipairs(g_mouseHistory) do
+		
+			if lastEntry ~= nil then
+
+				local dx = entry.x - lastEntry.x
+				local dy = entry.y - lastEntry.y
+				local distance = math.sqrt(dx*dx + dy*dy)
+
+				local direction
+				if dx > 0 then
+					direction = "right"
+				elseif dx < 0 then
+					direction = "left"
+				elseif dy > 0 then
+					direction = "down"
+				elseif dy < 0 then
+					direction = "up"
+				else
+					direction = "none"
+				end
+				
+
+				if distance > mouseSonarOpt.mouseShakeThreshold
+					and (lastDirection == nil or lastDirection ~= direction)
+				 then
+					numChanges = numChanges + 1;
+				end
+				lastDirection = direction
+			end
+			lastEntry = entry;
+	end
+
+	if numChanges > 2 then
+		return true;
+	end
+	return false;
+end
+
 local function onUpdate(self, elapsed)
 
 	if mouseSonarOpt.deactivated then
@@ -124,6 +210,8 @@ mouseSonar:RegisterEvent("PLAYER_REGEN_DISABLED");
 mouseSonar:RegisterEvent("PLAYER_REGEN_ENABLED");
 
 
+
+
 function mouseSonar:ADDON_LOADED(addon,...)
 	if addon == "mousesonar" then
 		mouseSonarOpt =
@@ -137,6 +225,8 @@ function mouseSonar:ADDON_LOADED(addon,...)
 				onMouselook = (mouseSonarOpt ~= nil and mouseSonarOpt.onMouselook) or (mouseSonarOpt == nil and true),
 				colorValue = (mouseSonarOpt ~= nil and mouseSonarOpt.colorValue) or {1,1,1},
 				HollowCircle = (mouseSonarOpt ~= nil and mouseSonarOpt.HollowCircle) or (mouseSonarOpt == nil and false),
+				mouseShakeDetection = (mouseSonarOpt ~= nil and mouseSonarOpt.mouseShakeDetection) or (mouseSonarOpt == nil and false),
+				mouseShakeThreshold = (mouseSonarOpt ~= nil and mouseSonarOpt.mouseShakeThreshold) or 300,
 			}
 		UpdatePulseTexture();
 		createOptions();
@@ -167,6 +257,18 @@ end
 
 function mouseSonar:CINEMATIC_STOP()
 	RemoveHideCondition("Cinematic");
+end
+
+function ON_UPDATE() --script on update
+	if mouseSonarOpt.mouseShakeDetection then
+		if g_lastHistoryUpdateTime == nil or GetTime() - g_lastHistoryUpdateTime > 0.1 then
+			pushHistoryEntry();
+			if checkIfMouseShake() then
+				ShowCircle();
+			end
+			g_lastHistoryUpdateTime = GetTime();
+		end
+	end
 end
 
 -- Hide during screenshots
@@ -384,11 +486,22 @@ function createOptions()
 		mouseSonarOpt.onMouselook = not mouseSonarOpt.onMouselook;
 	end);
 
+	--MOUSE SHAKE DETECTION
+	g_mouseSonarOptPanel.lab = createLabel("Mouse Shake Detection");
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -148);
+	g_mouseSonarOptPanel.chk = createCheck("chkMouseShake", 20, 20);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -145);
+	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.mouseShakeDetection);
+
+	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+		mouseSonarOpt.mouseShakeDetection = not mouseSonarOpt.mouseShakeDetection;
+	end);
+
 	-- HOLLOW CIRCLE OPTION
 	g_mouseSonarOptPanel.lab = createLabel("Show as Hollow Circle");
-	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -148);
+	g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -168);
 	g_mouseSonarOptPanel.chk = createCheck("chkHollowCircle", 20, 20);
-	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -145);
+	g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -165);
 	g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.HollowCircle);
 
 	g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -426,8 +539,20 @@ function createOptions()
 	g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", 60, -285);
 
 
+		--MOUSE SHAKE threshold
+		g_mouseSonarOptPanel.slider = createSlider("Mouse Shake Threshold", 160, 15, 10,1000, 1);
+		g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.mouseShakeThreshold);
+		g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -355);
+	
+		g_mouseSonarOptPanel.slider:SetScript("OnValueChanged", function(self, value)
+			mouseSonarOpt.mouseShakeThreshold = value;
+		end);
+
+
 	g_mouseSonarOptPanel.helpText = createLabel("You can Keybind or macro /pulse to Pulse Manually");
-	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -325);
+	g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -400);
+
+
 
 	InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
