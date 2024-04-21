@@ -78,7 +78,7 @@ local function UpdateAlwaysVisible()
 
     -- TOGGLE VISIBLE
     local combatOK = not mouseSonarOpt.onlyCombat or g_combat;
-    local raidOK = not mouseSonarOpt.onlyRaid or IsInRaid();
+    local raidOK = not mouseSonarOpt.onlyRaid or isInRaidOrParty();
     local canBeShown = combatOK and raidOK;
 
     local isCurrentlyVisible = g_circle:IsVisible();
@@ -291,7 +291,7 @@ end
 
 function ShowCircle(bypass)
     if (g_combat or not mouseSonarOpt.onlyCombat) and
-        (IsInRaid() or not mouseSonarOpt.onlyRaid) or bypass then
+        (isInRaidOrParty() or not mouseSonarOpt.onlyRaid) or bypass then
 
         g_totalElapsed = 0;
         g_circleInitialized = false;
@@ -303,7 +303,7 @@ function ToggleAlwaysVisible()
 
     if mouseSonarOpt.alwaysVisible and not mouseSonarOpt.deactivated and
         (not mouseSonarOpt.onlyCombat or g_combat) and
-        (not mouseSonarOpt.onlyRaid or IsInRaid()) then
+        (not mouseSonarOpt.onlyRaid or isInRaidOrParty()) then
         ShowCircle();
         return true;
     end
@@ -450,7 +450,7 @@ function createOptions()
     end)
 
     -- ONLY IN RAID
-    g_mouseSonarOptPanel.lab = createLabel("Show only while in raid group");
+    g_mouseSonarOptPanel.lab = createLabel("Show only while in raid group or a party with more 5 or more people");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
     g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
     g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
@@ -542,4 +542,9 @@ function createOptions()
     g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -400);
 
     InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
+end
+
+
+function isInRaidOrParty()
+    return IsInRaid() or GetNumSubgroupMembers() > 4;
 end
