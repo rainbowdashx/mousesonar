@@ -12,6 +12,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
+      - name: Clone project
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Create Package
         uses: BigWigsMods/packager@master
         env:
