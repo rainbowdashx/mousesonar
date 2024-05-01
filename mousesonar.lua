@@ -345,14 +345,32 @@ local function createSlider(name, x, y, min, max, step)
 end
 
 local function showColorPicker(r, g, b, a, callback)
-    ColorPickerFrame:SetColorRGB(r, g, b);
-    ColorPickerFrame.hasOpacity = false;
-    ColorPickerFrame.opacity = (a ~= nil), a;
-    ColorPickerFrame.previousValues = {r, g, b, a};
-    ColorPickerFrame.func, ColorPickerFrame.opacityFunc, ColorPickerFrame.cancelFunc =
-        callback, callback, callback;
-    ColorPickerFrame:Hide(); -- Need to run the OnShow handler.
-    ColorPickerFrame:Show();
+
+    local info = {}
+    info.r, info.g, info.b = r, g, b
+    info.opacity = a
+    info.hasOpacity = false
+    info.swatchFunc = function()
+        local _r, _g, _b = ColorPickerFrame:GetColorRGB()
+        local _a = 1;
+        mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3] =
+            _r, _g, _b;
+        refreshPulseColor();
+        callback(_r, _g, _b, _a);
+    end
+
+    info.cancelFunc = function()
+        local _r, _g, _b = ColorPickerFrame.previousValues.r,
+                           ColorPickerFrame.previousValues.g,
+                           ColorPickerFrame.previousValues.b;
+        local _a = 1;
+        mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3] =
+            _r, _g, _b;
+        refreshPulseColor();
+        callback(_r, _g, _b, _a);
+    end
+    ColorPickerFrame:SetupColorPickerAndShow(info)
+
 end
 
 local function createColorSelect(name, ...)
@@ -370,20 +388,9 @@ local function createColorSelect(name, ...)
                           mouseSonarOpt.colorValue[3], 1);
 
     -- recolor callback function
-    f.recolorTexture = function(oldColor)
-        local r, g, b, a;
-        if not oldColor then
-            r, g, b = ColorPickerFrame:GetColorRGB();
-            a = 1;
-            f.tex:SetColorTexture(r, g, b, a);
-            mouseSonarOpt.colorValue[1], mouseSonarOpt.colorValue[2], mouseSonarOpt.colorValue[3] =
-                r, g, b;
-            refreshPulseColor();
-        else
-            f.tex:SetColorTexture(mouseSonarOpt.colorValue[1],
-                                  mouseSonarOpt.colorValue[2],
-                                  mouseSonarOpt.colorValue[3], 1);
-        end
+    f.recolorTexture = function(r, g, b, a)
+        local _r, _g, _b, _a = r, g, b, a;
+        f.tex:SetColorTexture(_r, _g, _b, _a);
     end
 
     f:EnableMouse(true)
@@ -450,7 +457,8 @@ function createOptions()
     end)
 
     -- ONLY IN RAID
-    g_mouseSonarOptPanel.lab = createLabel("Show only while in raid group or a party with more 5 or more people");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   "Show only while in raid group or a party with more 5 or more people");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
     g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
     g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
@@ -544,7 +552,4 @@ function createOptions()
     InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
 end
 
-
-function isInRaidOrParty()
-    return IsInRaid() or GetNumSubgroupMembers() > 4;
-end
+function isInRaidOrParty() return IsInRaid() or GetNumSubgroupMembers() > 4; end
