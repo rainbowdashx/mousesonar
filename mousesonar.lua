@@ -19,6 +19,7 @@ local g_circleInitialized = false;
 local g_mouseHistory = {};
 local g_mouseHistoryMaxSize = 30;
 local g_lastHistoryUpdateTime = 0;
+local category, layout
 
 local g_circle = CreateFrame("Model", nil, self);
 g_circle:SetWidth(0);
@@ -549,7 +550,44 @@ function createOptions()
                                         "You can Keybind or macro /pulse to Pulse Manually");
     g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -400);
 
-    InterfaceOptions_AddCategory(g_mouseSonarOptPanel.panel);
+    category, layout = Settings.RegisterCanvasLayoutCategory(g_mouseSonarOptPanel.panel, g_mouseSonarOptPanel.panel.name, g_mouseSonarOptPanel.panel.name);
+    category.ID = g_mouseSonarOptPanel.panel.name
+    Settings.RegisterAddOnCategory(category);
+
 end
+
+--[[
+    local category = Settings.RegisterVerticalLayoutCategory("Mouse Sonar")
+
+    local function OnSettingChanged(setting, value)
+        print("Setting changed:", setting:GetVariable(), value)
+    end
+
+    g_mouseSonarOptPanel.lab = createLabel("Deactivated");
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -48);
+    g_mouseSonarOptPanel.chk = createCheck("chkDeactivate", 20, 20);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -45);
+    g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.deactivated);
+
+    g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+        mouseSonarOpt.deactivated = not mouseSonarOpt.deactivated;
+
+        if not ToggleAlwaysVisible() then g_circle:Hide(); end
+    end);
+
+do 
+    local name = "Deactivated"
+    local variable = "deactivated"
+	local variableKey = "toggle"
+	local variableTbl = MyAddOn_SavedVars
+    local defaultValue = false
+
+    local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+	setting:SetValueChangedCallback(OnSettingChanged)
+
+    local tooltip = "Mouse Sonar is deactivated"
+	Settings.CreateCheckbox(category, setting, tooltip)
+end
+]]
 
 function isInRaidOrParty() return IsInRaid() or GetNumSubgroupMembers() > 4; end
