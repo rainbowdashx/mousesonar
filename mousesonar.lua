@@ -1,9 +1,7 @@
 _G.CreateFrame("Frame"):SetScript("OnUpdate", function(self, elapsed)
 
     if IsMouselooking() then
-        if not mouseSonarOpt.doNotHideOnMouseLook then
         AddHideCondition("Mouselook");
-        end
     else
         RemoveHideCondition("Mouselook");
     end
@@ -272,15 +270,19 @@ end);
 _G.MovieFrame:HookScript("OnHide", function() RemoveHideCondition("Movie"); end);
 
 -- Hook camera movement to hide cursor effects
-_G.hooksecurefunc("CameraOrSelectOrMoveStart", function()
-    if mouseSonarOpt.doNotHideOnMouseLook then return; end
-    AddHideCondition("Camera");
-end);
+_G.hooksecurefunc("CameraOrSelectOrMoveStart",
+                  function() AddHideCondition("Camera"); end);
 
 _G.hooksecurefunc("CameraOrSelectOrMoveStop",
                   function() RemoveHideCondition("Camera"); end);
 
 function AddHideCondition(conditionName)
+
+    if mouseSonarOpt.doNotHideOnMouseLook and
+        (conditionName == "Mouselook" or conditionName == "Camera") then
+        return;
+    end
+
     if not g_activeHideConditions[conditionName] then
         g_activeHideConditions[conditionName] = true;
         g_circle:Hide();
@@ -288,6 +290,12 @@ function AddHideCondition(conditionName)
 end
 
 function RemoveHideCondition(conditionName)
+
+    if mouseSonarOpt.doNotHideOnMouseLook and next(g_activeHideConditions) ==
+        nil and (conditionName == "Mouselook" or conditionName == "Camera") then
+        ShowCircle();
+    end
+
     if g_activeHideConditions[conditionName] then
         g_activeHideConditions[conditionName] = nil;
 
