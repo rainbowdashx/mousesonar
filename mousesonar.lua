@@ -126,45 +126,42 @@ local function pushHistoryEntry()
 end
 
 local function checkIfMouseShake()
-
-    local numChanges = 0;
-    local timeNow = GetTime();
-    local timeThreshold = timeNow - 0.5;
-    local lastDirection = nil;
-    local lastEntry = nil;
+    local timeNow = GetTime()
+    local numChanges = 0
+    local cumulativeDistance = 0
+    local lastDirection = nil
+    local timeThreshold = timeNow - 0.5
+    local lastEntry = nil
 
     for i, entry in ipairs(g_mouseHistory) do
-
-        if lastEntry ~= nil then
-
+        if lastEntry then
             local dx = entry.x - lastEntry.x
             local dy = entry.y - lastEntry.y
             local distance = math.sqrt(dx * dx + dy * dy)
 
-            local direction
-            if dx > 0 then
-                direction = "right"
-            elseif dx < 0 then
-                direction = "left"
-            elseif dy > 0 then
-                direction = "down"
-            elseif dy < 0 then
-                direction = "up"
-            else
-                direction = "none"
-            end
+            if distance > mouseSonarOpt.mouseShakeThreshold then
+                local direction
+                if math.abs(dx) > math.abs(dy) then
+                    direction = dx > 0 and "right" or "left"
+                else
+                    direction = dy > 0 and "up" or "down"
+                end
 
-            if distance > mouseSonarOpt.mouseShakeThreshold and
-                (lastDirection == nil or lastDirection ~= direction) then
-                numChanges = numChanges + 1;
+                if lastDirection == nil or lastDirection ~= direction then
+                    numChanges = numChanges + 1
+                    lastDirection = direction
+                end
+
+                cumulativeDistance = cumulativeDistance + distance
             end
-            lastDirection = direction
         end
-        lastEntry = entry;
+        lastEntry = entry
     end
 
-    if numChanges > 2 then return true; end
-    return false;
+    if numChanges > 2 and cumulativeDistance >
+        (mouseSonarOpt.mouseShakeThreshold * 2) then return true end
+
+    return false
 end
 
 local function onUpdate(self, elapsed)
