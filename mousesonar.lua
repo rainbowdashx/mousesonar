@@ -1,7 +1,9 @@
 _G.CreateFrame("Frame"):SetScript("OnUpdate", function(self, elapsed)
 
     if IsMouselooking() then
+        if not mouseSonarOpt.doNotHideOnMouseLook then
         AddHideCondition("Mouselook");
+        end
     else
         RemoveHideCondition("Mouselook");
     end
@@ -221,7 +223,10 @@ function mouseSonar:ADDON_LOADED(addon, ...)
                 mouseSonarOpt.mouseShakeDetection) or
                 (mouseSonarOpt == nil and false),
             mouseShakeThreshold = (mouseSonarOpt ~= nil and
-                mouseSonarOpt.mouseShakeThreshold) or 300
+                mouseSonarOpt.mouseShakeThreshold) or 300,
+            doNotHideOnMouseLook = (mouseSonarOpt ~= nil and
+                mouseSonarOpt.doNotHideOnMouseLook) or
+                (mouseSonarOpt == nil and false)
         }
         UpdatePulseTexture();
         createOptions();
@@ -267,8 +272,10 @@ end);
 _G.MovieFrame:HookScript("OnHide", function() RemoveHideCondition("Movie"); end);
 
 -- Hook camera movement to hide cursor effects
-_G.hooksecurefunc("CameraOrSelectOrMoveStart",
-                  function() AddHideCondition("Camera"); end);
+_G.hooksecurefunc("CameraOrSelectOrMoveStart", function()
+    if mouseSonarOpt.doNotHideOnMouseLook then return; end
+    AddHideCondition("Camera");
+end);
 
 _G.hooksecurefunc("CameraOrSelectOrMoveStop",
                   function() RemoveHideCondition("Camera"); end);
@@ -420,11 +427,20 @@ function createOptions()
                                              UIParent);
     g_mouseSonarOptPanel.panel.name = "Mouse Sonar Options";
 
+    local local_x = 60;
+    local local_y = -45;
+
+    local chk_margin_x = 20;
+    local chk_margin_y = -3;
+
+    local margin_y = 20;
+
     -- DEACTIVATED
     g_mouseSonarOptPanel.lab = createLabel("Deactivated");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -48);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkDeactivate", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -45);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.deactivated);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -433,11 +449,14 @@ function createOptions()
         if not ToggleAlwaysVisible() then g_circle:Hide(); end
     end);
 
+    local_y = local_y - margin_y;
+
     -- ALWAYS VISIBLE
     g_mouseSonarOptPanel.lab = createLabel("Circle always visible");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -68);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkAlwaysVisible", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -65);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.alwaysVisible);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -445,11 +464,29 @@ function createOptions()
         ToggleAlwaysVisible();
     end);
 
+    local_y = local_y - margin_y;
+
+    -- DO NOT HIDE ON MOUSELOOK
+    g_mouseSonarOptPanel.lab = createLabel("Do not hide on Mouselook");
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
+    g_mouseSonarOptPanel.chk = createCheck("chkDoNotHideOnMouseLook", 20, 20);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
+    g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.doNotHideOnMouseLook);
+
+    g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+        mouseSonarOpt.doNotHideOnMouseLook =
+            not mouseSonarOpt.doNotHideOnMouseLook;
+    end);
+
+    local_y = local_y - margin_y;
+
     -- ONLY IN COMBAT
     g_mouseSonarOptPanel.lab = createLabel("Show only in Combat");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -88);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkOnlyInCombat", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -85);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyCombat);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -457,12 +494,15 @@ function createOptions()
         ToggleAlwaysVisible();
     end)
 
+    local_y = local_y - margin_y;
+
     -- ONLY IN RAID
     g_mouseSonarOptPanel.lab = createLabel(
                                    "Show only while in raid group or a party with more 5 or more people");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -108);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -105);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onlyRaid);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -470,22 +510,28 @@ function createOptions()
         ToggleAlwaysVisible();
     end)
 
+    local_y = local_y - margin_y;
+
     -- MOUSE LOOK END
     g_mouseSonarOptPanel.lab = createLabel("Show on Mouselook end");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -128);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkMouselook", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -125);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.onMouselook);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
         mouseSonarOpt.onMouselook = not mouseSonarOpt.onMouselook;
     end);
 
+    local_y = local_y - margin_y;
+
     -- MOUSE SHAKE DETECTION
     g_mouseSonarOptPanel.lab = createLabel("Mouse Shake Detection");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -148);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkMouseShake", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -145);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.mouseShakeDetection);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -493,11 +539,14 @@ function createOptions()
             not mouseSonarOpt.mouseShakeDetection;
     end);
 
+    local_y = local_y - margin_y;
+
     -- HOLLOW CIRCLE OPTION
     g_mouseSonarOptPanel.lab = createLabel("Show as Hollow Circle");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 80, -168);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+                                      local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkHollowCircle", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", 60, -165);
+    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
     g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.HollowCircle);
 
     g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
@@ -505,11 +554,13 @@ function createOptions()
         UpdatePulseTexture();
     end);
 
+    local_y = local_y - (margin_y * 2)
+
     -- PULSE SIZE
     g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 16, 1024,
                                                32);
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize);
-    g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -205);
+    g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
     g_mouseSonarOptPanel.slider:SetScript("OnValueChanged",
                                           function(self, value)
@@ -517,11 +568,13 @@ function createOptions()
         ShowCircle(1);
     end);
 
+    local_y = local_y - (margin_y * 2)
+
     -- STARTING ALPHA VALUE
     g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15,
                                                0, 255, 1);
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
-    g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -255);
+    g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
     g_mouseSonarOptPanel.slider:SetScript("OnValueChanged",
                                           function(self, value)
@@ -529,28 +582,38 @@ function createOptions()
         ShowCircle(1);
     end);
 
+    local_y = local_y - (margin_y * 2)
+
     -- COLOR
     g_mouseSonarOptPanel.lab = createLabel("Color");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", 90, -300);
+    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x * 2,
+                                      local_y + chk_margin_y * 2);
     g_mouseSonarOptPanel.clr = createColorSelect("ColorSelect");
-    g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", 60, -285);
+    g_mouseSonarOptPanel.clr:SetPoint("TOPLEFT", local_x, local_y);
+
+    local_y = local_y - (margin_y * 3)
 
     -- MOUSE SHAKE threshold
     g_mouseSonarOptPanel.slider = createSlider("Mouse Shake Threshold", 160, 15,
                                                10, 1000, 1);
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.mouseShakeThreshold);
-    g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", 60, -355);
+    g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
     g_mouseSonarOptPanel.slider:SetScript("OnValueChanged",
                                           function(self, value)
         mouseSonarOpt.mouseShakeThreshold = value;
     end);
 
+    local_y = local_y - (margin_y * 3)
+
     g_mouseSonarOptPanel.helpText = createLabel(
                                         "You can Keybind or macro /pulse to Pulse Manually");
-    g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", 60, -400);
+    g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", local_x, local_y);
 
-    category, layout = Settings.RegisterCanvasLayoutCategory(g_mouseSonarOptPanel.panel, g_mouseSonarOptPanel.panel.name, g_mouseSonarOptPanel.panel.name);
+    category, layout = Settings.RegisterCanvasLayoutCategory(
+                           g_mouseSonarOptPanel.panel,
+                           g_mouseSonarOptPanel.panel.name,
+                           g_mouseSonarOptPanel.panel.name);
     category.ID = g_mouseSonarOptPanel.panel.name
     Settings.RegisterAddOnCategory(category);
 
