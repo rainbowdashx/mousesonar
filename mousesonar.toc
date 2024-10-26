@@ -5,10 +5,9 @@
 ## SavedVariables: mouseSonarOpt
 ## X-Wago-ID: 7x611B61
 
-mousesonar.lua
-
-
 localization\localization.enUS.lua
 localization\localization.deDE.lua
 localization\localization.frFR.lua
 localization\localization.zhCN.lua
+
+mousesonar.lua
