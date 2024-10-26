@@ -12,6 +12,8 @@ end)
 BINDING_HEADER_MOUSESONAR = "Mouse Sonar";
 BINDING_NAME_FINDMOUSE = "Find Mouse";
 
+local L = MouseSonar_Locale or {}
+
 local g_mouseSonarOptPanel = {};
 local g_activeHideConditions = {};
 local g_combat = false;
@@ -441,7 +443,9 @@ function createOptions()
     local margin_y = 20;
 
     -- DEACTIVATED
-    g_mouseSonarOptPanel.lab = createLabel("Deactivated");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Disable Mouse Sonar"] or
+                                       "Disable Mouse Sonar");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkDeactivate", 20, 20);
@@ -457,7 +461,9 @@ function createOptions()
     local_y = local_y - margin_y;
 
     -- ALWAYS VISIBLE
-    g_mouseSonarOptPanel.lab = createLabel("Circle always visible");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Always Show Circle"] or
+                                       "Always Show Circle");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkAlwaysVisible", 20, 20);
@@ -472,7 +478,9 @@ function createOptions()
     local_y = local_y - margin_y;
 
     -- DO NOT HIDE ON MOUSELOOK
-    g_mouseSonarOptPanel.lab = createLabel("Do not hide on Mouselook");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Keep Circle Visible During Mouselook"] or
+                                       "Keep Circle Visible During Mouselook");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkDoNotHideOnMouseLook", 20, 20);
@@ -487,7 +495,9 @@ function createOptions()
     local_y = local_y - margin_y;
 
     -- ONLY IN COMBAT
-    g_mouseSonarOptPanel.lab = createLabel("Show only in Combat");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Show Circle Only in Combat"] or
+                                       "Show Circle Only in Combat");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkOnlyInCombat", 20, 20);
@@ -503,7 +513,8 @@ function createOptions()
 
     -- ONLY IN RAID
     g_mouseSonarOptPanel.lab = createLabel(
-                                   "Show only while in raid group or a party with more 5 or more people");
+                                   L["Show Circle Only in Raid/Party"] or
+                                       "Show Circle Only in Raid/Party");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkOnlyInRaid", 20, 20);
@@ -518,7 +529,9 @@ function createOptions()
     local_y = local_y - margin_y;
 
     -- MOUSE LOOK END
-    g_mouseSonarOptPanel.lab = createLabel("Show on Mouselook end");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Show Circle When Mouselook Ends"] or
+                                       "Show Circle When Mouselook Ends");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkMouselook", 20, 20);
@@ -532,7 +545,9 @@ function createOptions()
     local_y = local_y - margin_y;
 
     -- MOUSE SHAKE DETECTION
-    g_mouseSonarOptPanel.lab = createLabel("Mouse Shake Detection");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Enable Mouse Shake Detection"] or
+                                       "Enable Mouse Shake Detection");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkMouseShake", 20, 20);
@@ -547,7 +562,9 @@ function createOptions()
     local_y = local_y - margin_y;
 
     -- HOLLOW CIRCLE OPTION
-    g_mouseSonarOptPanel.lab = createLabel("Show as Hollow Circle");
+    g_mouseSonarOptPanel.lab = createLabel(
+                                   L["Display Hollow Circle Style"] or
+                                       "Display Hollow Circle Style");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
     g_mouseSonarOptPanel.chk = createCheck("chkHollowCircle", 20, 20);
@@ -562,8 +579,9 @@ function createOptions()
     local_y = local_y - (margin_y * 2)
 
     -- PULSE SIZE
-    g_mouseSonarOptPanel.slider = createSlider("Pulse Size", 140, 15, 16, 1024,
-                                               32);
+    g_mouseSonarOptPanel.slider = createSlider(
+                                      L["Circle Size"] or "Circle Size", 140,
+                                      15, 16, 1024, 32);
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.pulseSize);
     g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
@@ -576,8 +594,10 @@ function createOptions()
     local_y = local_y - (margin_y * 2)
 
     -- STARTING ALPHA VALUE
-    g_mouseSonarOptPanel.slider = createSlider("Starting alpha value", 160, 15,
-                                               0, 255, 1);
+    g_mouseSonarOptPanel.slider = createSlider(
+                                      L["Initial Circle Opacity"] or
+                                          "Initial Circle Opacity", 160, 15, 0,
+                                      255, 1);
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.startingAlphaValue * 255);
     g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
@@ -590,7 +610,7 @@ function createOptions()
     local_y = local_y - (margin_y * 2)
 
     -- COLOR
-    g_mouseSonarOptPanel.lab = createLabel("Color");
+    g_mouseSonarOptPanel.lab = createLabel(L["Circle Color"] or "Circle Color");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x * 2,
                                       local_y + chk_margin_y * 2);
     g_mouseSonarOptPanel.clr = createColorSelect("ColorSelect");
@@ -599,8 +619,10 @@ function createOptions()
     local_y = local_y - (margin_y * 3)
 
     -- MOUSE SHAKE threshold
-    g_mouseSonarOptPanel.slider = createSlider("Mouse Shake Threshold", 160, 15,
-                                               10, 1000, 1);
+    g_mouseSonarOptPanel.slider = createSlider(
+                                      L["Mouse Shake Sensitivity"] or
+                                          "Mouse Shake Sensitivity", 160, 15,
+                                      10, 1000, 1);
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.mouseShakeThreshold);
     g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
@@ -612,7 +634,8 @@ function createOptions()
     local_y = local_y - (margin_y * 3)
 
     g_mouseSonarOptPanel.helpText = createLabel(
-                                        "You can Keybind or macro /pulse to Pulse Manually");
+                                        L["Bind or use /pulse command for manual pulse."] or
+                                            "Bind or use /pulse command for manual pulse.");
     g_mouseSonarOptPanel.helpText:SetPoint("TOPLEFT", local_x, local_y);
 
     category, layout = Settings.RegisterCanvasLayoutCategory(
