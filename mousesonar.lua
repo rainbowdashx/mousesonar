@@ -460,37 +460,61 @@ function createOptions()
 
     local_y = local_y - margin_y;
 
+    -- GROUP
     -- ALWAYS VISIBLE
     g_mouseSonarOptPanel.lab = createLabel(
                                    L["Always Show Circle"] or
                                        "Always Show Circle");
     g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
-    g_mouseSonarOptPanel.chk = createCheck("chkAlwaysVisible", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
-    g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.alwaysVisible);
-
-    g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
-        mouseSonarOpt.alwaysVisible = not mouseSonarOpt.alwaysVisible;
-        ToggleAlwaysVisible();
-    end);
+    g_mouseSonarOptPanel.chkAlwaysVisible =
+        createCheck("chkAlwaysVisible", 20, 20);
+    g_mouseSonarOptPanel.chkAlwaysVisible:SetPoint("TOPLEFT", local_x, local_y);
+    g_mouseSonarOptPanel.chkAlwaysVisible:SetChecked(mouseSonarOpt.alwaysVisible);
 
     local_y = local_y - margin_y;
 
     -- DO NOT HIDE ON MOUSELOOK
-    g_mouseSonarOptPanel.lab = createLabel(
+    g_mouseSonarOptPanel.labDoNotHideOnMouseLook = createLabel(
                                    L["Keep Circle Visible During Mouselook"] or
                                        "Keep Circle Visible During Mouselook");
-    g_mouseSonarOptPanel.lab:SetPoint("TOPLEFT", local_x + chk_margin_x,
+    g_mouseSonarOptPanel.labDoNotHideOnMouseLook:SetPoint("TOPLEFT", local_x + chk_margin_x,
                                       local_y + chk_margin_y);
-    g_mouseSonarOptPanel.chk = createCheck("chkDoNotHideOnMouseLook", 20, 20);
-    g_mouseSonarOptPanel.chk:SetPoint("TOPLEFT", local_x, local_y);
-    g_mouseSonarOptPanel.chk:SetChecked(mouseSonarOpt.doNotHideOnMouseLook);
+    g_mouseSonarOptPanel.chkDoNotHideOnMouseLook = createCheck(
+                                                       "chkDoNotHideOnMouseLook",
+                                                       20, 20);
+    g_mouseSonarOptPanel.chkDoNotHideOnMouseLook:SetPoint("TOPLEFT", local_x,
+                                                          local_y);
+    g_mouseSonarOptPanel.chkDoNotHideOnMouseLook:SetChecked(
+        mouseSonarOpt.doNotHideOnMouseLook);
 
-    g_mouseSonarOptPanel.chk:SetScript("OnClick", function()
+    g_mouseSonarOptPanel.chkDoNotHideOnMouseLook:SetScript("OnClick", function()
         mouseSonarOpt.doNotHideOnMouseLook =
             not mouseSonarOpt.doNotHideOnMouseLook;
     end);
+
+    g_mouseSonarOptPanel.chkAlwaysVisible:SetScript("OnClick", function()
+        mouseSonarOpt.alwaysVisible = not mouseSonarOpt.alwaysVisible;
+        updateDoNotHideOnMouseLookOption(mouseSonarOpt.alwaysVisible);
+        ToggleAlwaysVisible();
+    end);
+
+    function updateDoNotHideOnMouseLookOption(isActive)
+        if isActive then
+            g_mouseSonarOptPanel.chkDoNotHideOnMouseLook:Enable()
+            g_mouseSonarOptPanel.labDoNotHideOnMouseLook:SetTextColor(1, 1, 1)
+            if g_mouseSonarOptPanel.chkDoNotHideOnMouseLook:GetChecked() then
+                mouseSonarOpt.doNotHideOnMouseLook = true
+            end
+        else
+            g_mouseSonarOptPanel.chkDoNotHideOnMouseLook:Disable()
+            g_mouseSonarOptPanel.labDoNotHideOnMouseLook:SetTextColor(0.5, 0.5, 0.5)
+            mouseSonarOpt.doNotHideOnMouseLook = false
+        end
+    end
+    updateDoNotHideOnMouseLookOption(mouseSonarOpt.alwaysVisible)
+
+    -- GROUP
 
     local_y = local_y - margin_y;
 
