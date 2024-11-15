@@ -1,0 +1,13 @@
+## Interface: 40400, 40401
+## Title: mouse sonar
+## Version: 1.5
+## Author: Morf
+## SavedVariables: mouseSonarOpt
+## X-Wago-ID: 7x611B61
+
+localization\localization.enUS.lua
+localization\localization.deDE.lua
+localization\localization.frFR.lua
+localization\localization.zhCN.lua
+
+mousesonar.lua
