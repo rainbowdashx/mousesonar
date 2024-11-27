@@ -5,6 +5,7 @@
 ## SavedVariables: mouseSonarOpt
 ## X-Wago-ID: 7x611B61
 ## X-Flavor: Cata
+## AllowLoadGameType: cata
 
 localization\localization.enUS.lua
 localization\localization.deDE.lua
