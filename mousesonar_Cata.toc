@@ -4,6 +4,7 @@
 ## Author: Morf
 ## SavedVariables: mouseSonarOpt
 ## X-Wago-ID: 7x611B61
+## X-Flavor: Cata
 
 localization\localization.enUS.lua
 localization\localization.deDE.lua
