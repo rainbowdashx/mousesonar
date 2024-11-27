@@ -4,6 +4,7 @@
 ## Author: Morf
 ## SavedVariables: mouseSonarOpt
 ## X-Wago-ID: 7x611B61
+## X-Curse-Project-ID: 95758
 ## X-Flavor: Cata
 ## AllowLoadGameType: cata
 
