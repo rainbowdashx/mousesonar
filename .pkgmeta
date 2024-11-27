@@ -1,9 +1,0 @@
-package-as: Mouse Sonar
-
-manual-changelog: true
-
-game-version-overrides:
-  wow_retail:
-    toc-file: mousesonar.toc
-  wow_cataclysm:
-    toc-file: mousesonar_Cata.toc
