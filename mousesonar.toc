@@ -3,6 +3,8 @@
 ## Version: 1.5
 ## Author: Morf
 ## SavedVariables: mouseSonarOpt
+## Category: Interface Enhancements
+## IconTexture: Interface/Icons/Inv_valentinescandy
 ## X-Wago-ID: 7x611B61
 ## X-Curse-Project-ID: 95758
 ## X-Flavor: Mainline
