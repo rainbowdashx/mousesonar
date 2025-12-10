@@ -1,4 +1,4 @@
-## Interface: 11507, 11505
+## Interface: 11508, 11507
 ## Title: mouse sonar
 ## Version: 1.5
 ## Author: Morf

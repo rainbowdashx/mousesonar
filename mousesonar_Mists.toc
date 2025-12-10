@@ -1,4 +1,4 @@
-## Interface: 50500
+## Interface: 50502, 50503
 ## Title: mouse sonar
 ## Version: 1.5
 ## Author: Morf
