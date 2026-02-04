@@ -6,7 +6,7 @@
 ## X-Wago-ID: 7x611B61
 ## X-Curse-Project-ID: 95758
 ## X-Flavor: TBC
-## AllowLoadGameType: cata
+## AllowLoadGameType: tbc
 
 localization\localization.enUS.lua
 localization\localization.deDE.lua
