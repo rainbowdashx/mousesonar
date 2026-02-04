@@ -1,0 +1,16 @@
+## Interface: 20505
+## Title: mouse sonar
+## Version: 1.5
+## Author: Morf
+## SavedVariables: mouseSonarOpt
+## X-Wago-ID: 7x611B61
+## X-Curse-Project-ID: 95758
+## X-Flavor: TBC
+## AllowLoadGameType: cata
+
+localization\localization.enUS.lua
+localization\localization.deDE.lua
+localization\localization.frFR.lua
+localization\localization.zhCN.lua
+
+mousesonar.lua
