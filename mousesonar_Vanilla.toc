@@ -7,6 +7,8 @@
 ## X-Curse-Project-ID: 95758
 ## X-Flavor: Vanilla
 ## AllowLoadGameType: vanilla
+## Category: Interface Enhancements
+## IconTexture: Interface/Icons/Inv_valentinescandy
 
 localization\localization.enUS.lua
 localization\localization.deDE.lua
