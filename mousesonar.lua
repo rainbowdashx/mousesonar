@@ -19,8 +19,10 @@ local g_activeHideConditions = {};
 local g_combat = false;
 local g_circleInitialized = false;
 local g_mouseHistory = {};
-local g_mouseHistoryMaxSize = 30;
-local g_lastHistoryUpdateTime = 0;
+local g_lastHistoryUpdateTime = nil;
+local g_nextShakeTime = 0;
+local SHAKE_WINDOW = 0.5;
+local SHAKE_SAMPLE_INTERVAL = 1 / 60;
 local category, layout
 
 local g_circle = CreateFrame("Model", nil, self);
@@ -97,73 +99,47 @@ local function UpdateAlwaysVisible()
                       cursorY - (mouseSonarOpt.pulseSize * 0.5));
 end
 
-local function removeOldEntries()
-
-    local timeNow = GetTime();
-    local timeThreshold = timeNow - 0.5;
-
-    local lastEntry = nil;
-    for i, entry in ipairs(g_mouseHistory) do
-        if entry.time < timeThreshold then
-            table.remove(g_mouseHistory, i);
-        end
-    end
-
-end
-
-local function pushHistoryEntry()
+local function pushHistoryEntry(timeNow)
     local cursorX, cursorY = GetCursorPosition();
+    local timeThreshold = timeNow - SHAKE_WINDOW;
 
-    local entry = {x = cursorX, y = cursorY, time = GetTime()};
-
-    table.insert(g_mouseHistory, entry);
-
-    if #g_mouseHistory > g_mouseHistoryMaxSize then
+    while g_mouseHistory[1] and g_mouseHistory[1].time < timeThreshold do
         table.remove(g_mouseHistory, 1);
     end
 
-    g_lastHistoryEntryTime = GetTime();
-
-    removeOldEntries();
+    table.insert(g_mouseHistory, {x = cursorX, y = cursorY, time = timeNow});
 end
 
 local function checkIfMouseShake()
-    local timeNow = GetTime()
-    local numChanges = 0
-    local cumulativeDistance = 0
-    local lastDirection = nil
-    local timeThreshold = timeNow - 0.5
-    local lastEntry = nil
+    local numReversals = 0;
+    local cumulativeDistance = 0;
+    local minimumStroke = math.max(8, mouseSonarOpt.mouseShakeThreshold / 3);
+    local anchor = g_mouseHistory[1];
+    local lastDirectionX, lastDirectionY;
 
-    for i, entry in ipairs(g_mouseHistory) do
-        if lastEntry then
-            local dx = entry.x - lastEntry.x
-            local dy = entry.y - lastEntry.y
-            local distance = math.sqrt(dx * dx + dy * dy)
+    for entryIndex = 2, #g_mouseHistory do
+        local entry = g_mouseHistory[entryIndex];
+        local deltaX = entry.x - anchor.x;
+        local deltaY = entry.y - anchor.y;
+        local distance = math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-            if distance > mouseSonarOpt.mouseShakeThreshold then
-                local direction
-                if math.abs(dx) > math.abs(dy) then
-                    direction = dx > 0 and "right" or "left"
-                else
-                    direction = dy > 0 and "up" or "down"
-                end
+        if distance >= minimumStroke then
+            local directionX = deltaX / distance;
+            local directionY = deltaY / distance;
 
-                if lastDirection == nil or lastDirection ~= direction then
-                    numChanges = numChanges + 1
-                    lastDirection = direction
-                end
-
-                cumulativeDistance = cumulativeDistance + distance
+            if lastDirectionX and
+                directionX * lastDirectionX + directionY * lastDirectionY <= -0.5 then
+                numReversals = numReversals + 1;
             end
+
+            cumulativeDistance = cumulativeDistance + distance;
+            lastDirectionX, lastDirectionY = directionX, directionY;
+            anchor = entry;
         end
-        lastEntry = entry
     end
 
-    if numChanges > 2 and cumulativeDistance >
-        (mouseSonarOpt.mouseShakeThreshold * 2) then return true end
-
-    return false
+    return numReversals >= 2 and
+        cumulativeDistance >= mouseSonarOpt.mouseShakeThreshold * 2;
 end
 
 local function onUpdate(self, elapsed)
@@ -248,13 +224,27 @@ function mouseSonar:CINEMATIC_START() AddHideCondition("Cinematic"); end
 function mouseSonar:CINEMATIC_STOP() RemoveHideCondition("Cinematic"); end
 
 function ON_UPDATE() -- script on update
-    if mouseSonarOpt.mouseShakeDetection then
-        if g_lastHistoryUpdateTime == nil or GetTime() - g_lastHistoryUpdateTime >
-            0.1 then
-            pushHistoryEntry();
-            if checkIfMouseShake() then ShowCircle(); end
-            g_lastHistoryUpdateTime = GetTime();
+    if not mouseSonarOpt or not mouseSonarOpt.mouseShakeDetection or
+        mouseSonarOpt.deactivated or mouseSonarOpt.alwaysVisible or
+        IsMouselooking() or next(g_activeHideConditions) ~= nil then
+        if g_lastHistoryUpdateTime then
+            g_mouseHistory = {};
+            g_lastHistoryUpdateTime = nil;
         end
+        return;
+    end
+
+    local timeNow = GetTime();
+    if timeNow < g_nextShakeTime then return; end
+    if g_lastHistoryUpdateTime and
+        timeNow - g_lastHistoryUpdateTime < SHAKE_SAMPLE_INTERVAL then return; end
+
+    pushHistoryEntry(timeNow);
+    g_lastHistoryUpdateTime = timeNow;
+    if checkIfMouseShake() then
+        ShowCircle();
+        g_mouseHistory = {};
+        g_nextShakeTime = timeNow + PULSE_LIFE_TIME;
     end
 end
 
@@ -647,6 +637,9 @@ function createOptions()
                                       L["Mouse Shake Sensitivity"] or
                                           "Mouse Shake Sensitivity", 160, 15,
                                       10, 1000, 1);
+    _G[g_mouseSonarOptPanel.slider:GetName() .. "Text"]:SetText(
+        (L["Mouse Shake Sensitivity"] or "Mouse Shake Sensitivity") .. "\n" ..
+        (L["(lower = more sensitive)"] or "(lower = more sensitive)"));
     g_mouseSonarOptPanel.slider:SetValue(mouseSonarOpt.mouseShakeThreshold);
     g_mouseSonarOptPanel.slider:SetPoint("TOPLEFT", local_x, local_y);
 
